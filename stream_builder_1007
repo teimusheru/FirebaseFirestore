@@ -1,0 +1,206 @@
+
+import 'package:a0919/src/calendar_week.dart';
+import 'package:a0919/src/models/decoration_item.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+
+import 'package:intl/intl.dart';
+
+import 'firebase_options.dart';
+import 'item/grocery_item.dart';
+import 'item/grocery_item_card_widget.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform
+  );
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'CalendarWeek Example',
+    home: UserInformation(),
+  );
+}
+
+
+class UserInformation extends StatefulWidget {
+  @override
+  _UserInformationState createState() => _UserInformationState();
+}
+
+
+//wigget
+class _UserInformationState extends State<UserInformation> {
+
+  final CalendarWeekController _controller = CalendarWeekController();
+  final Stream<QuerySnapshot> _usersStream =
+  FirebaseFirestore.instance.collection('users').snapshots();
+
+  Widget getHorizontalItemSlider(List<GroceryItem> items) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 10),
+      height: 250,
+      child: ListView.separated(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        itemCount: items.length,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              // onItemClicked(context, items[index]);
+            },
+            child: GroceryItemCardWidget(
+              item: items[index],
+              heroSuffix: "home_screen",
+            ),
+          );
+        },
+        separatorBuilder: (BuildContext context, int index) {
+          return SizedBox(
+            width: 20,
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance.collection('testCollection1').doc('testDocument1').snapshots(),
+        builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snapshot) {
+          if (snapshot.hasError) {
+            return const Text('Something went wrong');
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Text("Loading");
+          }
+
+          Map<String, dynamic> data = snapshot.data!.data() as Map<String, dynamic>;
+          return
+
+            Scaffold(
+              floatingActionButton: FloatingActionButton(
+                onPressed: () {
+                  _controller.jumpToDate(DateTime.now());
+                  setState(() {});
+                },
+                child: Icon(Icons.today),
+              ),
+              appBar: AppBar(
+                elevation: 0,
+                backgroundColor: Colors.blue,
+                title: Text('CalendarWeek'),
+              ),
+              body: Column(children: [
+                Container(
+                    decoration: BoxDecoration(boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 10,
+                          spreadRadius: 1)
+                    ]),
+                    child: CalendarWeek(
+                      controller: _controller,
+                      height: 100,
+                      showMonth: true,
+                      minDate: DateTime.now().add(
+                        Duration(days: -365),
+                      ),
+                      maxDate: DateTime.now().add(
+                        Duration(days: 365),
+                      ),
+                      onDatePressed: (DateTime datetime) {
+                        // Do something
+                        setState(() {});
+                      },
+                      onDateLongPressed: (DateTime datetime) {
+                        // Do something
+                      },
+                      onWeekChanged: () {
+                        // Do something
+                      },
+                      monthViewBuilder: (DateTime time) => Align(
+                        alignment: FractionalOffset.center,
+                        child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              DateFormat.yMMMM().format(time),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: Colors.blue, fontWeight: FontWeight.w600),
+                            )),
+                      ),
+                      decorations: [
+                        DecorationItem(
+                            decorationAlignment: FractionalOffset.bottomRight,
+                            date: DateTime.now(),
+                            decoration: Icon(
+                              Icons.today,
+                              color: Colors.blue,
+                            )),
+                        DecorationItem(
+                            date: DateTime.now().add(Duration(days: 3)),
+                            decoration: Text(
+                              'Holiday',
+                              style: TextStyle(
+                                color: Colors.brown,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            )),
+                      ],
+                    )),
+                Expanded(
+                  child: Center(
+                    child:  Container(
+          child: ListTile(
+          subtitle: Text(" Full name ${data['data1']} "),
+          title: Text(" Full name ${data['name']} "),
+          ),
+          )
+
+                  ),
+                ),
+
+                getHorizontalItemSlider(exclusiveOffers),
+                getHorizontalItemSlider(exclusiveOffers),
+                getHorizontalItemSlider(exclusiveOffers),
+              ]),
+            );
+
+
+            /*Scaffold(
+            appBar: AppBar(
+              title: const Text('テストアプリ'),
+            ),
+            body:  Container(
+              child: ListTile(
+                subtitle: Text(" Full name ${data['data1']} "),
+                title: Text(" Full name ${data['data1']} "),
+              ),
+            )
+          );*/
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+
+    );
+  }
+}
